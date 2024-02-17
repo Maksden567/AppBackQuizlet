@@ -31,14 +31,6 @@ namespace AppQuizlet.Controllers
 			{
 				User userModel = new User { Email = user.username,UserName=user.username };
 				var result = await _UserManager.CreateAsync(userModel, user.password);
-				if (await _RoleManager.RoleExistsAsync("user"))
-				{
-					Console.WriteLine(true);
-				}
-				else
-				{
-					Console.WriteLine(false);
-				}
 				await _UserManager.AddToRoleAsync(userModel, "user");
 
 				if(result.Succeeded)
@@ -50,10 +42,16 @@ namespace AppQuizlet.Controllers
 				}
 				else
 				{
-					return BadRequest(Json("Помилка при регістрації"));
+					return Unauthorized(Json("Помилка при реєстрація"));
+					
 				}
+
+
+				return BadRequest(Json("Помилка при регістрації"));
 			}
-			return BadRequest(Json("Помилка при регістрації"));
+
+			return View(user);
+			
 		}
 
 
@@ -65,7 +63,7 @@ namespace AppQuizlet.Controllers
 		{
 			if (ModelState.IsValid)
 			{
-				var result = await _SignInManager.PasswordSignInAsync(user.username, user.password,false,false);
+				var result = await _SignInManager.PasswordSignInAsync(user.username, user.password,true,false);
 				if (result.Succeeded)
 				{
 					return Json("Ви авторизовані");
@@ -75,11 +73,22 @@ namespace AppQuizlet.Controllers
 			return BadRequest(Json("Помилка при авторизації"));
 		}
 
-		
 
 
 
 
+		[HttpGet]
+
+		public ActionResult CheckLogin()
+		{
+				if(User.Identity?.IsAuthenticated  == true)
+				{
+				return Json(User.Identity.Name);
+				}
+			return BadRequest();
+					
+			
+		}
 
 
 	}

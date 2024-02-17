@@ -136,21 +136,25 @@ namespace AppQuizlet.Controllers
 		
 
 		[HttpPost]
+		
 		[Authorize]
+		
 		public IActionResult createLibraries([FromBody] LibraryEnglish library)
 		{
 			string userId = User.Identity.GetUserId();
-			if(userId==null)
+			
+			if (userId == null) 
 			{
 				return Json(BadRequest("Ви не авторизовані для того щоб створювати модуль зареєструйтеся або авторизуйтеся"));
 			}
-			if (library.Name == null)
+			if (library.Name.IsNullOrEmpty())
 			{
-				return Json(BadRequest("Ви не вказали імя модуля"));
+				Console.WriteLine(library.Name);
+				return BadRequest(Json("Ви не вказали імя модуля"));
 			}
 			
 			
-			var module = new LibraryEnglish { UserId = userId, Name = library.Name };
+			var module = new LibraryEnglish { UserId = userId, Name = library.Name,img=library.img };
 
 			_context.libraries.Add(module);
 
@@ -164,11 +168,11 @@ namespace AppQuizlet.Controllers
 		[HttpGet]
 		public IActionResult getLibraries()
 		{
-			var libraries = _context.libraries;
+			var libraries = _context.libraries.Where(l=>l.UserId==User.Identity.GetUserId());
 
 			if (libraries.IsNullOrEmpty())
 			{
-				return Json(NotFound("У вас немає модулів"));
+				return Json("У вас немає модулів");
 			}
 			return Json(libraries);
 
@@ -266,9 +270,20 @@ namespace AppQuizlet.Controllers
 		}
 
 		[HttpPost("/translateVoice")]
+		[Consumes("text/plain")]
 
-		public async Task<IActionResult> TranslateSpeach([FromBody] string searchString)
+		public async Task<IActionResult> TranslateSpeach()
 		{
+			string searchString;
+			using (var reader = new StreamReader(Request.Body))
+			{
+				searchString = await reader.ReadToEndAsync();
+				if (searchString.IsNullOrEmpty())
+				{
+					return BadRequest("String is shit");
+				}
+			}
+
 			var credentials = new BasicAWSCredentials("AKIAYMDT7FSJAGZSOFHH", "ldbVO4I6YzO/mrEAHxa6kHlnuZI0nsW3y2tHPtv/");
 
 			var polly = new AmazonPollyClient(credentials, RegionEndpoint.USEast1);

@@ -7,6 +7,7 @@ namespace App.Models
 	{
 		public int Id { get; set; }
 		public string Name { get; set; }
+		public string? img { get; set; }
 		public User? User { get; set; }
 		public string? UserId { get; set; }
 		public List<WordModel>? words { get ;set;}
